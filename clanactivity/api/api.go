@@ -30,7 +30,7 @@ func HandleRequests(PORT int) {
 
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/clans/{tag}", exportClanActivity)
-	myRouter.HandleFunc("/clans/{tag}/update", updateClanActivity)
+	myRouter.HandleFunc("/clans/update/{tag}", updateClanActivity)
 
     log.Fatal(http.ListenAndServe(hostPORT, myRouter))
 }
