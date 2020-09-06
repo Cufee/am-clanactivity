@@ -1,7 +1,8 @@
 package api
 
-import (	
-    "log"
+import (
+	"log"
+	"time"	
 	"strconv"
 	"strings"
 
@@ -32,6 +33,7 @@ func HandleRequests(PORT int) {
 }
 
 func exportClanActivity(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
     vars := mux.Vars(r)
 	log.Println(vars["tag"])
 
@@ -51,4 +53,5 @@ func exportClanActivity(w http.ResponseWriter, r *http.Request) {
 		export.Members = append(export.Members, r)
 	}
 	json.NewEncoder(w).Encode(export)
+	log.Println("Request took", time.Since(start))
 }
