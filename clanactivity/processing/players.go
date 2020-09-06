@@ -35,7 +35,9 @@ func PlayersFefreshSession(players []int, channel chan mongo.Player) {
 func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player, wg *sync.WaitGroup){
 	defer func() {
 		// Add playerData to the channel and finish waitgroup
-		playersChannel <- playerData
+		if playerData.SessionBattles > 0 {
+			playersChannel <- playerData
+		}
 		wg.Done()
 	}()	
 	// Used at the bottom to calculate session rating
@@ -43,11 +45,15 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player,
 	// Check current player battles
 	liveBattles, err := wgapi.GetLiveBattles(playerData.ID)
 	if liveBattles == oldBattles || liveBattles == 0 {
+		playerData.SessionRating 	= 0
+		playerData.SessionBattles 	= 0
 		return
 	}
 	vehicles, err := wgapi.GetVehicleStats(playerData.ID)
 	if err != nil {
 		log.Println(err)
+		playerData.SessionRating 	= 0
+		playerData.SessionBattles 	= 0
 		return
 	}
 
@@ -98,18 +104,27 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player,
 		rawRating 	+= ratingWeighted
 	}
 
-	if oldBattles >= int(battles) {
+	if int(battles) != liveBattles {
+		playerData.Battles 			= liveBattles
+		playerData.SessionRating 	= 0
+		playerData.SessionBattles 	= 0
 		log.Println("Live battles does not match calculated totals for", playerData.Nickname)
 		return
 	}
 
 	// oldBattles defined at the start of this func
-	oldRating 	:= playerData.AverageRating
-	playerData.AverageRating = 	int(math.Round(rawRating / battles))
-	playerData.Battles 		 =	int(math.Round(battles))
-	sessionRatingWeighted 	:=  (playerData.AverageRating * playerData.Battles) - (oldRating * oldBattles)
-	sessionRating			:=	sessionRatingWeighted / (playerData.Battles - oldBattles)
-	playerData.SessionRating = sessionRating
+	playerData.SessionBattles	= 	int(battles) - oldBattles
+	if playerData.SessionBattles == 0 {
+		playerData.SessionRating = 0
+		return
+	}
+	oldRating					:= 	playerData.AverageRating
+	playerData.AverageRating	= 	int(math.Round(rawRating / battles))
+	playerData.Battles			=	int(battles)
+	sessionRatingWeighted		:=  (playerData.AverageRating * playerData.Battles) - (oldRating * oldBattles)
+	sessionRating				:=	sessionRatingWeighted / (playerData.Battles - oldBattles)
+	playerData.SessionRating	= 	sessionRating
 
+	// log.Println(playerData.SessionBattles, playerData.SessionRating, playerData.Nickname)
 	return
 }

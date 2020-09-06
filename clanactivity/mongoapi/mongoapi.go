@@ -49,17 +49,19 @@ type Clan struct {
 	Realm       	string      `bson:"realm" json:"realm"`
 	TotalRating 	int			`bson:"total_rating" json:"total_rating"`
 	SessionRating 	int			`bson:"session_rating" json:"session_rating"`
+	LastUpdate		time.Time	`bson:"last_update" json:"last_update"`
 }
 // Player DB record struct
 type Player struct {
-	ID                	int    `bson:"_id" json:"player_id"`
-	JoinedAt          	int    `bson:"joined_at" json:"joined_at"`
-	Nickname          	string `bson:"nickname" json:"nickname"`
-	PremiumExpiration 	int    `bson:"premium_expiration" json:"premium_expiration"`
-	AverageRating     	int    `bson:"average_rating" json:"average_rating"`
-	Battles           	int    `bson:"battles" json:"battles"`
-	TotalRating			int    `bson:"total_rating" json:"total_rating"`
-	SessionRating		int    `bson:"session_rating" json:"session_rating"`
+	ID                	int    			`bson:"_id" json:"player_id"`
+	JoinedAt          	int    			`bson:"joined_at" json:"joined_at"`
+	Nickname          	string 			`bson:"nickname" json:"nickname"`
+	PremiumExpiration 	int    			`bson:"premium_expiration" json:"premium_expiration"`
+	AverageRating     	int    			`bson:"average_rating" json:"average_rating"`
+	Battles           	int    			`bson:"battles" json:"battles"`
+	SessionBattles		int    			`bson:"session_battles" json:"session_battles"`
+	SessionRating		int    			`bson:"session_rating" json:"session_rating"`
+	LastUpdate			time.Time		`bson:"last_update" json:"last_update"`
 }
 
 
@@ -113,6 +115,9 @@ func UpdateClan(clanData Clan, upsert bool) (string, error) {
 	} else {
 		opts = options.Update().SetUpsert(false)	
 	}
+	// Set LastUpdate
+	loc, _ := time.LoadLocation("UTC")
+	clanData.LastUpdate = time.Now().In(loc)
 	// Update and return result/error
 	filter := bson.M{"_id": clanData.ID}
 	result, err := clansCollection.UpdateOne(ctx, filter, bson.M{"$set": clanData}, opts)
@@ -144,6 +149,9 @@ func UpdatePlayer(playerData Player, upsert bool) (string, error) {
 	} else {
 		opts = options.Update().SetUpsert(false)	
 	}
+	// Set LastUpdate
+	loc, _ := time.LoadLocation("UTC")
+	playerData.LastUpdate = time.Now().In(loc)
 	// Update and return result/error
 	filter := bson.M{"_id": playerData.ID}
 	result, err := playersCollection.UpdateOne(ctx, filter, bson.M{"$set": playerData}, opts)
