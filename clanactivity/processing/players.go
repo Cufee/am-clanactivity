@@ -104,11 +104,11 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player,
 		rawRating 	+= ratingWeighted
 	}
 
-	if int(battles) != liveBattles {
-		playerData.Battles 			= liveBattles
+	if int(battles) < oldBattles {
+		log.Println("Current battles cnt is less than old battles cnt for", playerData.Nickname)
+		playerData.Battles 			= int(battles)
 		playerData.SessionRating 	= 0
 		playerData.SessionBattles 	= 0
-		log.Println("Live battles does not match calculated totals for", playerData.Nickname)
 		return
 	}
 
@@ -121,8 +121,8 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player,
 	oldRating					:= 	playerData.AverageRating
 	playerData.AverageRating	= 	int(math.Round(rawRating / battles))
 	playerData.Battles			=	int(battles)
-	sessionRatingWeighted		:=  (playerData.AverageRating * playerData.Battles) - (oldRating * oldBattles)
-	sessionRating				:=	sessionRatingWeighted / (playerData.Battles - oldBattles)
+	sessionRatingWeighted		:=  (playerData.AverageRating * int(battles)) - (oldRating * oldBattles)
+	sessionRating				:=	sessionRatingWeighted / (int(battles) - oldBattles)
 	playerData.SessionRating	= 	sessionRating
 
 	// log.Println(playerData.SessionBattles, playerData.SessionRating, playerData.Nickname)

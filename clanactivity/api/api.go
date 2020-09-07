@@ -23,6 +23,11 @@ type exportJSON struct {
 	Members []mongo.Player	`json:"players"`
 }
 
+type reqClanInfo struct {
+	Tag 	string	`json:"clan_tag"`
+	Realm 	string	`json:"clan_realm"`
+}
+
 // HandleRequests - start API
 func HandleRequests(PORT int) {
 	log.Println("Starting webserver on", PORT)
@@ -31,6 +36,7 @@ func HandleRequests(PORT int) {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/clans/{tag}", exportClanActivity)
 	myRouter.HandleFunc("/clans/update/{tag}", updateClanActivity)
+	// myRouter.HandleFunc("/clans/add", addNewClan)
 
     log.Fatal(http.ListenAndServe(hostPORT, myRouter))
 }
@@ -45,6 +51,11 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(code)
 	w.Write(response)
+	log.Println("Request - ", code)
+}
+
+func respondWithCode(w http.ResponseWriter, code int) {
+    w.WriteHeader(code)
 	log.Println("Request - ", code)
 }
 
@@ -113,4 +124,47 @@ func updateClanActivity(w http.ResponseWriter, r *http.Request) {
 	// Wait for player updates to finish
 	wg.Wait()
 	log.Println(vars["tag"], "- request took", time.Since(start))
+}
+
+func addNewClan(w http.ResponseWriter, r *http.Request) {
+	var request reqClanInfo
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	clanTag		:= request.Tag
+	clanRealm	:= request.Realm
+
+	log.Println(clanTag, clanRealm)
+
+	err = proc.EnableNewClan(clanRealm, clanTag)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	filter := bson.M{"clan_tag": clanTag}
+	clanData, err := mongo.GetClan(filter)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response := make(chan mongo.Player, 51)
+	proc.PlayersFefreshSession(clanData.MembersIds, response)
+	var wg sync.WaitGroup
+	for r := range response {
+		wg.Add(1)
+		go func(p mongo.Player) {
+			defer wg.Done()
+
+			_, err := mongo.UpdatePlayer(p, true)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}(r)
+	}
+	respondWithCode(w, http.StatusOK)
+	wg.Wait()
 }

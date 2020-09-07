@@ -5,7 +5,7 @@ import (
 	wgapi "github.com/cufee/am-clanactivity/externalapis/wargaming"
 )
 
-func addNewClan(realm string, clanTag string) (error) {
+func EnableNewClan(realm string, clanTag string) (error) {
 	clanID, err := wgapi.GetClanIDbyTag(realm, clanTag)
 	if err != nil{
 		return err
