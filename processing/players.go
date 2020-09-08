@@ -44,7 +44,6 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player,
 		if playerData.SessionBattles > 0 {
 			playersChannel <- playerData
 		}
-		log.Println("Routine complete, battles played:", playerData.SessionBattles)
 	}()
 	// Used at the bottom to calculate session rating
 	oldBattles := playerData.Battles
