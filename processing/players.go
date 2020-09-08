@@ -40,6 +40,7 @@ func PlayersFefreshSession(players []int, channel chan mongo.Player) {
 func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer func() {
+		log.Println("Routine complete")
 		// Add playerData to the channel and finish waitgroup
 		if playerData.SessionBattles > 0 {
 			playersChannel <- playerData
