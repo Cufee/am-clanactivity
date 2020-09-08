@@ -48,7 +48,7 @@ func respondWithError(w http.ResponseWriter, code int, message string) {
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	response, _ := json.Marshal(payload)
 
-	// w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(response)
 	log.Println("Request - ", code)
@@ -92,6 +92,7 @@ func exportClanActivity(w http.ResponseWriter, r *http.Request) {
 	for r := range response {
 		export.Members = append(export.Members, r)
 	}
+	log.Println(len(export.Members))
 	// Send response
 	respondWithJSON(w, http.StatusOK, export)
 
