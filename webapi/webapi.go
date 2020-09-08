@@ -48,7 +48,7 @@ func respondWithError(w http.ResponseWriter, code int, message string) {
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	response, _ := json.Marshal(payload)
 
-	w.Header().Set("Content-Type", "application/json")
+	// w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(response)
 	log.Println("Request - ", code)
@@ -73,6 +73,7 @@ func exportClanActivity(w http.ResponseWriter, r *http.Request) {
 	if clanTag == (reqClanInfo{}.Tag) || clanRealm == (reqClanInfo{}.Realm) {
 		// Check if both Tag and Realm are provided
 		respondWithError(w, http.StatusBadRequest, ("Clan tag or realm not provided"))
+		return
 	}
 
 	filter := bson.M{"clan_tag": clanTag}
@@ -93,6 +94,8 @@ func exportClanActivity(w http.ResponseWriter, r *http.Request) {
 	}
 	// Send response
 	respondWithJSON(w, http.StatusOK, export)
+
+	return
 }
 
 // PUT
@@ -109,6 +112,7 @@ func updateClanActivity(w http.ResponseWriter, r *http.Request) {
 	if clanTag == (reqClanInfo{}.Tag) || clanRealm == (reqClanInfo{}.Realm) {
 		// Check if both Tag and Realm are provided
 		respondWithError(w, http.StatusBadRequest, ("Clan tag or realm not provided"))
+		return
 	}
 
 	filter := bson.M{"clan_tag": clanTag}
