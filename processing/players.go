@@ -23,6 +23,7 @@ func PlayersFefreshSession(players []int, channel chan mongo.Player) {
 		if err != nil {
 			// Need to add a player if not in DB
 			log.Println(err)
+			continue
 		}
 		wg.Add(1)
 		go calcPlayerRating(playerData, channel, &wg)
@@ -36,17 +37,21 @@ func PlayersFefreshSession(players []int, channel chan mongo.Player) {
 
 // calcPlayerRating - Caculate player rating and return updated playerData to the channel
 func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player, wg *sync.WaitGroup) {
-	defer func(wg *sync.WaitGroup) {
+	defer wg.Done()
+	defer func() {
 		// Add playerData to the channel and finish waitgroup
 		if playerData.SessionBattles > 0 {
 			playersChannel <- playerData
 		}
-		wg.Done()
-	}(wg)
+	}()
 	// Used at the bottom to calculate session rating
 	oldBattles := playerData.Battles
 	// Check current player battles
 	liveBattles, err := wgapi.GetLiveBattles(playerData.ID)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	if liveBattles == oldBattles || liveBattles == 0 || oldBattles == 0 {
 		playerData.SessionRating = 0
 		playerData.SessionBattles = 0
@@ -69,7 +74,8 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player,
 		if err != nil {
 			// No tank average data, no need to spam log/report
 			continue
-		} else if tankAvgData.All.Battles == 0 || tank.All.Battles == 0 {
+		}
+		if tankAvgData.All.Battles == 0 || tank.All.Battles == 0 {
 			continue
 		}
 
