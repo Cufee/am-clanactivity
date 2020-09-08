@@ -30,7 +30,7 @@ func PlayersFefreshSession(players []int, channel chan mongo.Player) {
 	}
 	wg.Wait()
 	log.Println(cnt)
-	close(channel)
+	channel <- mongo.Player{}
 	return
 }
 
