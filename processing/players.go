@@ -3,6 +3,7 @@ package processing
 import (
 	"log"
 	"math"
+	"time"
 
 	"sync"
 
@@ -27,11 +28,11 @@ func PlayersFefreshSession(players []int, channel chan mongo.Player) {
 		wg.Add(1)
 		go calcPlayerRating(playerData, channel, &wg)
 	}
-	log.Println(len(channel))
+	start := time.Now()
+	log.Println("Starting wg.Wait()")
 	wg.Wait()
-	log.Println(len(channel))
+	log.Println("wg.Wait() took", (time.Now().Sub(start)))
 	close(channel)
-	log.Println(len(channel))
 	return
 }
 
