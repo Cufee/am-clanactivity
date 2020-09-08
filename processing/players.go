@@ -16,7 +16,6 @@ func PlayersFefreshSession(players []int, channel chan mongo.Player) {
 	// Waitgroup for player update goroutines
 	var wg sync.WaitGroup
 	// Loop througp player IDs and start goroutines
-	cnt := 0
 	for _, playerID := range players {
 		filter := bson.M{"_id": playerID}
 		playerData, err := mongo.GetPlayer(filter)
@@ -27,11 +26,12 @@ func PlayersFefreshSession(players []int, channel chan mongo.Player) {
 		}
 		wg.Add(1)
 		go calcPlayerRating(playerData, channel, &wg)
-		cnt++
 	}
+	log.Println(len(channel))
 	wg.Wait()
-	log.Println(cnt)
+	log.Println(len(channel))
 	close(channel)
+	log.Println(len(channel))
 	return
 }
 
