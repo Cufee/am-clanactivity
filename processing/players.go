@@ -42,18 +42,21 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player,
 	defer func() {
 		// Add playerData to the channel and finish waitgroup
 		if playerData.SessionBattles > 0 {
+			log.Println("Sent to channel")
 			playersChannel <- playerData
 		}
 	}()
 	// Used at the bottom to calculate session rating
 	oldBattles := playerData.Battles
-	// Check current player battles
-	liveBattles, err := wgapi.GetLiveBattles(playerData.ID)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	if liveBattles == oldBattles || liveBattles == 0 || oldBattles == 0 {
+
+	// // Check current player battles
+	// liveBattles, err := wgapi.GetLiveBattles(playerData.ID)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	return
+	// }
+
+	if oldBattles == 0 {
 		playerData.SessionRating = 0
 		playerData.SessionBattles = 0
 		return
@@ -74,9 +77,11 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player,
 		tankAvgData, err := mongo.GetTankAvg(filter)
 		if err != nil {
 			// No tank average data, no need to spam log/report
+			log.Println("No average for", tank.TankID)
 			continue
 		}
 		if tankAvgData.All.Battles == 0 || tank.All.Battles == 0 {
+			log.Println("Bad average data for", tank.TankID)
 			continue
 		}
 
@@ -125,6 +130,7 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player,
 	// oldBattles defined at the start of this func
 	playerData.SessionBattles = int(battles) - oldBattles
 	if playerData.SessionBattles == 0 {
+		log.Println("Session battles is 0 for", playerData.Nickname)
 		playerData.SessionRating = 0
 		return
 	}
