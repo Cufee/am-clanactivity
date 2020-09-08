@@ -88,6 +88,7 @@ func exportClanActivity(w http.ResponseWriter, r *http.Request) {
 
 	response := make(chan mongo.Player, 51)
 	proc.PlayersFefreshSession(clanData.MembersIds, response)
+	log.Println(len(response))
 
 	for r := range response {
 		export.Members = append(export.Members, r)
