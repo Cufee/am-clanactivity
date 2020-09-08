@@ -124,6 +124,10 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player,
 		playerData.Battles = int(battles)
 		playerData.SessionRating = 0
 		playerData.SessionBattles = 0
+		_, err := mongo.UpdatePlayer(playerData, false)
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
