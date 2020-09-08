@@ -30,19 +30,19 @@ func PlayersFefreshSession(players []int, channel chan mongo.Player) {
 	}
 	wg.Wait()
 	log.Println(cnt)
-	channel <- mongo.Player{}
+	close(channel)
 	return
 }
 
 // calcPlayerRating - Caculate player rating and return updated playerData to the channel
 func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player, wg *sync.WaitGroup) {
-	defer func() {
+	defer func(wg *sync.WaitGroup) {
 		// Add playerData to the channel and finish waitgroup
 		if playerData.SessionBattles > 0 {
 			playersChannel <- playerData
 		}
 		wg.Done()
-	}()
+	}(wg)
 	// Used at the bottom to calculate session rating
 	oldBattles := playerData.Battles
 	// Check current player battles
