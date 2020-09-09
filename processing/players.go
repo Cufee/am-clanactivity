@@ -149,8 +149,8 @@ func CalcVehicleRawRating(vehicles []wgapi.VehicleStats) (battles float64, rawRa
 	}
 	// Calculate rating for all vehicles in go routines
 	// Create channels for battles and rawRating
-	var battlesChan chan float64
-	var rawRatingChan chan float64
+	battlesChan := make(chan float64, len(vehicles))
+	rawRatingChan := make(chan float64, len(vehicles))
 	for _, tank := range vehicles {
 		wg.Add(1)
 		go func(tank wgapi.VehicleStats) {
