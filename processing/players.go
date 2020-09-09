@@ -66,7 +66,7 @@ func GetPlayerVehBattles(pid int) (battles int, err error) {
 
 // calcPlayerRating - Caculate player rating and return updated playerData to the channel
 func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player) {
-	defer log.Println("Finished calcPlayerRating for", playerData.Nickname)
+	defer log.Println("Finished calcPlayerRating for", playerData.ID)
 	defer func() {
 		playersChannel <- playerData
 	}()
