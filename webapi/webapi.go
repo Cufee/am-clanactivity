@@ -128,7 +128,7 @@ func updateClanActivity(w http.ResponseWriter, r *http.Request) {
 
 	// Reset sessions for all players
 	var wg sync.WaitGroup
-	for pid := range clanData.MembersIds {
+	for _, pid := range clanData.MembersIds {
 		wg.Add(1)
 		go func(pid int) {
 			defer wg.Done()
