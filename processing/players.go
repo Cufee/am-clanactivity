@@ -175,7 +175,7 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player,
 	// oldBattles defined at the start of this func
 	playerData.SessionBattles = int(battles) - oldBattles
 	if playerData.SessionBattles == 0 {
-		log.Println("Session battles is 0 for", playerData.Nickname)
+		// log.Println("Session battles is 0 for", playerData.Nickname)
 		playerData.SessionRating = 0
 		return
 	}
