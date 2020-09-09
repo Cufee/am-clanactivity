@@ -2,6 +2,7 @@ package externalapis
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 )
@@ -12,7 +13,7 @@ var clientHTTP = &http.Client{Timeout: 10 * time.Second}
 // GetJSON - Send a GET request to URL and return JSON result into target interface
 func GetJSON(url string, target interface{}) error {
 	r, err := clientHTTP.Get(url)
-	// log.Println(r.Status)
+	log.Println(url, "-", r.Status)
 	if err != nil {
 		return err
 	}
