@@ -40,11 +40,11 @@ func PlayersFefreshSession(players []int, channel chan mongo.Player) {
 func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer func() {
-		// Add playerData to the channel and finish waitgroup
-		if playerData.SessionBattles > 0 {
-			log.Println("Sent to channel")
-			playersChannel <- playerData
-		}
+		playersChannel <- playerData
+		// // Add playerData to the channel and finish waitgroup
+		// if playerData.SessionBattles > 0 {
+		// 	log.Println("Sent to channel")
+		// }
 	}()
 	// Used at the bottom to calculate session rating
 	oldBattles := playerData.Battles
@@ -64,8 +64,8 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player,
 	vehicles, err := wgapi.GetVehicleStats(playerData.ID)
 	if err != nil {
 		log.Println(err)
-		playerData.SessionRating = 0
-		playerData.SessionBattles = 0
+		playerData.SessionRating = -1
+		playerData.SessionBattles = -1
 		return
 	}
 
