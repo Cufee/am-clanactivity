@@ -125,31 +125,41 @@ func updateClanActivity(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	var export exportJSON
-	export.Clan = clanData
 
-	response := make(chan mongo.Player, 51)
-	proc.PlayersFefreshSession(clanData.MembersIds, response)
-
+	// Reset sessions for all players
 	var wg sync.WaitGroup
-
-	for r := range response {
-		export.Members = append(export.Members, r)
+	for pid := range clanData.MembersIds {
 		wg.Add(1)
-		go func(p mongo.Player) {
+		go func(pid int) {
 			defer wg.Done()
 
-			_, err := mongo.UpdatePlayer(p, true)
+			// Get player data
+			filter := bson.M{"_id": pid}
+			playerData, err := mongo.GetPlayer(filter)
 			if err != nil {
-				log.Fatal(err)
+				log.Fatalln(err)
+				return
 			}
-		}(r)
+			// Get player current battles
+			battles, err := proc.GetPlayerVehBattles(pid)
+			if err != nil {
+				log.Fatalln(err)
+				return
+			}
+			// Update player record
+			playerData.Battles = battles
+			playerData.SessionBattles = 0
+			playerData.SessionRating = 0
+			_, err = mongo.UpdatePlayer(playerData, true)
+			if err != nil {
+				log.Fatalln(err)
+				return
+			}
+			return
+		}(pid)
 	}
-	// Need to implement sorting the dict by SessionBattles - Currenlty done client side
-
 	// Send response
-	respondWithJSON(w, http.StatusOK, export)
-
+	respondWithCode(w, http.StatusOK)
 	// Wait for player updates to finish
 	wg.Wait()
 }

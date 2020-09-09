@@ -36,6 +36,18 @@ func PlayersFefreshSession(players []int, channel chan mongo.Player) {
 	return
 }
 
+// GetPlayerVehBattles - Get player battles total from adding all vehicle battles
+func GetPlayerVehBattles(pid int) (battles int, err error) {
+	vehicles, err := wgapi.GetVehicleStats(pid)
+	if err != nil {
+		return 0, err
+	}
+	for _, t := range vehicles {
+		battles += int(t.All.Battles)
+	}
+	return battles, nil
+}
+
 // calcPlayerRating - Caculate player rating and return updated playerData to the channel
 func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player, wg *sync.WaitGroup) {
 	defer wg.Done()
