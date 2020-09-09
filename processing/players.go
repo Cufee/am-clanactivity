@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"math"
+	"sync"
 
 	wgapi "github.com/cufee/am-clanactivity/externalapis/wargaming"
 	mongo "github.com/cufee/am-clanactivity/mongoapi"
@@ -14,40 +15,45 @@ import (
 func PlayersFefreshSession(players []int, realm string, channel chan mongo.Player) {
 	defer log.Println("Finished PlayersFefreshSession")
 	// Loop througp player IDs and start goroutines
+	var wg sync.WaitGroup
 	for _, playerID := range players {
-		filter := bson.M{"_id": playerID}
-		playerData, err := mongo.GetPlayer(filter)
-		if err != nil {
-			// Get player data
-			playerRes, err := wgapi.GetPlayerDataByID(realm, playerID)
+		wg.Add(1)
+		go func(pid int) {
+			defer wg.Done()
+			filter := bson.M{"_id": pid}
+			playerData, err := mongo.GetPlayer(filter)
 			if err != nil {
-				log.Println(err)
+				// Get player data
+				playerRes, err := wgapi.GetPlayerDataByID(realm, pid)
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				// Get player battles
+				battles, err := GetPlayerVehBattles(pid)
+				if err != nil {
+					log.Println(err)
+				}
+				// Add player to DB
+				var newPlayerData mongo.Player
+				newPlayerData.ID = pid
+				newPlayerData.Battles = battles
+				newPlayerData.Nickname = playerRes.Nickname
+				newPlayerData.PremiumExpiration = 0
+				newPlayerData.SessionBattles = 0
+				newPlayerData.SessionRating = 0
+				_, err = mongo.UpdatePlayer(newPlayerData, true)
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				channel <- newPlayerData
 				return
 			}
-			// Get player battles
-			battles, err := GetPlayerVehBattles(playerID)
-			if err != nil {
-				log.Println(err)
-			}
-			// Add player to DB
-			var newPlayerData mongo.Player
-			newPlayerData.ID = playerID
-			newPlayerData.Battles = battles
-			newPlayerData.Nickname = playerRes.Nickname
-			newPlayerData.PremiumExpiration = 0
-			newPlayerData.SessionBattles = 0
-			newPlayerData.SessionRating = 0
-			_, err = mongo.UpdatePlayer(newPlayerData, true)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			channel <- newPlayerData
-			continue
-		}
-		calcPlayerRating(playerData, channel)
+			calcPlayerRating(playerData, channel)
+		}(playerID)
 	}
-
+	wg.Wait()
 	close(channel)
 	return
 }
