@@ -13,7 +13,7 @@ import (
 )
 
 // PlayersFefreshSession - Refresh sessions for a list of players
-func PlayersFefreshSession(players []int, channel chan mongo.Player) {
+func PlayersFefreshSession(players []int, realm string, channel chan mongo.Player) {
 	// Waitgroup for player update goroutines
 	var wg sync.WaitGroup
 	// Loop througp player IDs and start goroutines
@@ -21,8 +21,37 @@ func PlayersFefreshSession(players []int, channel chan mongo.Player) {
 		filter := bson.M{"_id": playerID}
 		playerData, err := mongo.GetPlayer(filter)
 		if err != nil {
-			// Need to add a player if not in DB
-			log.Println(err)
+			// Start a go routine to add a player to DB
+			wg.Add(1)
+			go func(pid int) {
+				defer wg.Done()
+				// Get player data
+				playerRes, err := wgapi.GetPlayerDataByID(realm, pid)
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				// Get player battles
+				battles, err := GetPlayerVehBattles(pid)
+				if err != nil {
+					log.Println(err)
+				}
+				// Add player to DB
+				var newPlayerData mongo.Player
+				newPlayerData.ID = pid
+				newPlayerData.Battles = battles
+				newPlayerData.Nickname = playerRes.Nickname
+				newPlayerData.PremiumExpiration = 0
+				newPlayerData.SessionBattles = 0
+				newPlayerData.SessionRating = 0
+				_, err = mongo.UpdatePlayer(newPlayerData, true)
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				channel <- newPlayerData
+				return
+			}(playerID)
 			continue
 		}
 		wg.Add(1)

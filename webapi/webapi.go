@@ -87,7 +87,7 @@ func exportClanActivity(w http.ResponseWriter, r *http.Request) {
 	export.Clan = clanData
 
 	response := make(chan mongo.Player, 51)
-	proc.PlayersFefreshSession(clanData.MembersIds, response)
+	proc.PlayersFefreshSession(clanData.MembersIds, clanRealm, response)
 
 	for r := range response {
 		if r.ID == 0 {

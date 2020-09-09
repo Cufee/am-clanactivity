@@ -3,7 +3,6 @@ package externalapis
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -36,6 +35,11 @@ type ClanDetails struct {
 	ClanTag    string               `json:"tag"`
 	MembersIds []int                `json:"members_ids"`
 	Members    map[string]PlayerRes `json:"members"`
+}
+
+// PlayerResRaw -
+type PlayerResRaw struct {
+	Data map[string]PlayerRes `json:"data"`
 }
 
 // PlayerRes - player data response from WG
@@ -79,17 +83,6 @@ type VehicleStats struct {
 	TankID         int `json:"tank_id"`
 }
 
-// PlayerBattlesLive -
-type PlayerBattlesLive struct {
-	Data map[string]struct {
-		Statistics struct {
-			All struct {
-				Battles int `json:"battles"`
-			} `json:"all"`
-		} `json:"statistics"`
-	} `json:"data"`
-}
-
 // Players
 var wgAPIVehicles string = fmt.Sprintf("/wotb/tanks/stats/?application_id=%s&account_id=", config.WgAPIAppID)
 var wgAPIBaseStats string = fmt.Sprintf("/wotb/account/info/?application_id=%s&fields=statistics.all.battles&account_id=", config.WgAPIAppID)
@@ -116,27 +109,6 @@ func getAPIDomain(realm string, playerID int) (string, error) {
 		message := fmt.Sprintf("Realm %s not found", realm)
 		return "", errors.New(message)
 	}
-}
-
-// GetLiveBattles - Get current battles count for a player by ID
-func GetLiveBattles(playerID int) (int, error) {
-	domain, err := getAPIDomain("", playerID)
-	if err != nil {
-		return 0, err
-	}
-	// Get current battle count
-	playerIDStr := strconv.Itoa(playerID)
-	checkURL := domain + wgAPIBaseStats + playerIDStr
-	var liveBattles = new(PlayerBattlesLive)
-
-	err = utils.GetJSON(checkURL, liveBattles)
-	if err != nil {
-		log.Println("Failed to get current player battles\n", err)
-		return 0, err
-	}
-	// Get battles as int and return
-	liveBattlesCnt := liveBattles.Data[playerIDStr].Statistics.All.Battles
-	return liveBattlesCnt, nil
 }
 
 // GetVehicleStats - Get current vehicle stats for a player by playerID
@@ -213,4 +185,27 @@ func GetClanDataByID(realm string, clanID int) (ClanDetails, error) {
 		return result, errors.New(message)
 	}
 	return result, nil
+}
+
+// GetPlayerDataByID - Get player data from player ID
+func GetPlayerDataByID(realm string, pid int) (PlayerRes, error) {
+	realm = strings.ToUpper(realm)
+	domain, err := getAPIDomain(realm, 0)
+	if err != nil {
+		var result PlayerRes
+		return result, err
+	}
+	fullURL := domain + wgAPIBaseStats + strconv.Itoa(pid)
+	var response = new(PlayerResRaw)
+	err = utils.GetJSON(fullURL, response)
+	if err != nil {
+		var result PlayerRes
+		return result, err
+	}
+
+	var playerData PlayerRes
+	playerData.ID = response.Data[(strconv.Itoa(pid))].ID
+	playerData.Nickname = response.Data[(strconv.Itoa(pid))].Nickname
+
+	return playerData, nil
 }

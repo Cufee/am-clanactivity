@@ -51,12 +51,18 @@ func EnableNewClan(realm string, clanTag string) error {
 
 		go func(p wgapi.PlayerRes) {
 			defer wg.Done()
+			// Get player battles
+			battles, err := GetPlayerVehBattles(p.ID)
+			if err != nil {
+				log.Println(err)
+			}
 			var newPlayerData mongo.Player
 			newPlayerData.ID = p.ID
 			newPlayerData.Nickname = p.Nickname
 			newPlayerData.LastUpdate = p.LastUpdate
 			newPlayerData.JoinedAt = p.JoinedAt
-
+			newPlayerData.Battles = battles
+			// Add player to DB (update with upsert)
 			_, err = mongo.UpdatePlayer(newPlayerData, true)
 			if err != nil {
 				log.Fatal(err)
@@ -64,10 +70,5 @@ func EnableNewClan(realm string, clanTag string) error {
 		}(p)
 	}
 	wg.Wait()
-
-	// Refresh player sessions
-	response := make(chan mongo.Player, 51)
-	PlayersFefreshSession(newClanEntry.MembersIds, response)
-
 	return nil
 }
