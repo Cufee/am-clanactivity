@@ -57,7 +57,7 @@ func PlayersFefreshSession(players []int, realm string, channel chan mongo.Playe
 			continue
 		}
 		wg.Add(1)
-		go calcPlayerRating(playerData, channel, &wg)
+		calcPlayerRating(playerData, channel, &wg)
 	}
 	start := time.Now()
 	log.Println("Starting wg.Wait()")
