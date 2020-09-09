@@ -15,6 +15,7 @@ import (
 
 // PlayersFefreshSession - Refresh sessions for a list of players
 func PlayersFefreshSession(players []int, realm string, channel chan mongo.Player) {
+	defer log.Println("Finished PlayersFefreshSession")
 	// Waitgroup for player update goroutines
 	var wg sync.WaitGroup
 	// Loop througp player IDs and start goroutines
@@ -80,6 +81,7 @@ func GetPlayerVehBattles(pid int) (battles int, err error) {
 
 // calcPlayerRating - Caculate player rating and return updated playerData to the channel
 func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player, wg *sync.WaitGroup) {
+	defer log.Println("Finished calcPlayerRating for", playerData.Nickname)
 	defer wg.Done()
 	defer func() {
 		playersChannel <- playerData
@@ -150,6 +152,8 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player,
 
 // CalcVehicleRawRating - Calculate rating for a slice of VehicleStats structs.
 func CalcVehicleRawRating(vehicles []wgapi.VehicleStats) (battles float64, rawRating float64, err error) {
+	defer log.Println("Finished WN8")
+
 	var wg sync.WaitGroup
 	if len(vehicles) == 0 {
 		return 0, 0, errors.New("VehicleStats slice empty")
