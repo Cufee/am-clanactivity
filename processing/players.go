@@ -16,8 +16,8 @@ func PlayersFefreshSession(players []int, realm string, channel chan mongo.Playe
 	defer log.Println("Finished PlayersFefreshSession")
 	// Loop througp player IDs and start goroutines
 	var wg sync.WaitGroup
+	wg.Add(len(players))
 	for _, playerID := range players {
-		wg.Add(1)
 		go func(pid int) {
 			defer wg.Done()
 			filter := bson.M{"_id": pid}
