@@ -137,13 +137,13 @@ func updateClanActivity(w http.ResponseWriter, r *http.Request) {
 			filter := bson.M{"_id": pid}
 			playerData, err := mongo.GetPlayer(filter)
 			if err != nil {
-				log.Fatalln(err)
+				log.Println(err)
 				return
 			}
 			// Get player current battles
 			battles, err := proc.GetPlayerVehBattles(pid)
 			if err != nil {
-				log.Fatalln(err)
+				log.Println(err)
 				return
 			}
 			// Update player record
@@ -152,7 +152,7 @@ func updateClanActivity(w http.ResponseWriter, r *http.Request) {
 			playerData.SessionRating = 0
 			_, err = mongo.UpdatePlayer(playerData, true)
 			if err != nil {
-				log.Fatalln(err)
+				log.Println(err)
 				return
 			}
 			return
