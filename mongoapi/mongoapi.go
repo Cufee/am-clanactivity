@@ -44,14 +44,12 @@ type TankAverages struct {
 
 // Clan DB record struct
 type Clan struct {
-	ID            int       `bson:"_id" json:"clan_id"`
-	ClanName      string    `bson:"clan_name" json:"clan_name"`
-	ClanTag       string    `bson:"clan_tag" json:"clan_tag"`
-	MembersIds    []int     `bson:"members_ids" json:"members_ids"`
-	Realm         string    `bson:"realm" json:"realm"`
-	TotalRating   int       `bson:"total_rating" json:"total_rating"`
-	SessionRating int       `bson:"session_rating" json:"session_rating"`
-	LastUpdate    time.Time `bson:"last_update" json:"last_update"`
+	ID         int       `bson:"_id" json:"clan_id"`
+	ClanName   string    `bson:"clan_name" json:"clan_name"`
+	ClanTag    string    `bson:"clan_tag" json:"clan_tag"`
+	MembersIds []int     `bson:"members_ids" json:"members_ids"`
+	Realm      string    `bson:"realm" json:"realm"`
+	LastUpdate time.Time `bson:"last_update" json:"last_update"`
 }
 
 // Player DB record struct
@@ -62,8 +60,8 @@ type Player struct {
 	PremiumExpiration int       `bson:"premium_expiration" json:"premium_expiration"`
 	AverageRating     int       `bson:"average_rating" json:"average_rating"`
 	Battles           int       `bson:"battles" json:"battles"`
-	SessionBattles    int       `bson:"session_battles" json:"session_battles"`
-	SessionRating     int       `bson:"session_rating" json:"session_rating"`
+	SessionBattles    int       `json:"session_battles"`
+	SessionRating     int       `json:"session_rating"`
 	LastUpdate        time.Time `bson:"last_update" json:"last_update"`
 }
 

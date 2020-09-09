@@ -105,6 +105,18 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player,
 
 	oldBattles := playerData.Battles
 
+	if oldBattles == 0 {
+		playerData.Battles = int(battles)
+		playerData.AverageRating = int(math.Round(rawRating / battles))
+		playerData.SessionRating = 0
+		// Update player record
+		_, err := mongo.UpdatePlayer(playerData, false)
+		if err != nil {
+			log.Println(err)
+		}
+		return
+	}
+
 	if int(battles) < oldBattles {
 		log.Println("Current battles cnt is less than old battles cnt for", playerData.Nickname)
 		playerData.Battles = int(battles)
@@ -120,14 +132,9 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player,
 
 	// oldBattles defined at the start of this func
 	playerData.SessionBattles = int(battles) - oldBattles
-	if oldBattles == 0 || playerData.SessionBattles == 0 {
+	if playerData.SessionBattles == 0 {
 		playerData.AverageRating = int(math.Round(rawRating / battles))
 		playerData.SessionRating = 0
-		// Update player record
-		_, err := mongo.UpdatePlayer(playerData, false)
-		if err != nil {
-			log.Println(err)
-		}
 		return
 	}
 
@@ -159,7 +166,6 @@ func CalcVehicleRawRating(vehicles []wgapi.VehicleStats) (battles float64, rawRa
 			tankAvgData, err := mongo.GetTankAvg(filter)
 			if err != nil {
 				// No tank average data, no need to spam log/report
-				log.Println("No average for", tank.TankID)
 				return
 			}
 			if tankAvgData.All.Battles == 0 || tank.All.Battles == 0 {
