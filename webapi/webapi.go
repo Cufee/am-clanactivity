@@ -62,6 +62,8 @@ func respondWithCode(w http.ResponseWriter, code int) {
 
 // GET
 func exportClanActivity(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+
 	var request reqClanInfo
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
@@ -99,6 +101,7 @@ func exportClanActivity(w http.ResponseWriter, r *http.Request) {
 	// Send response
 	respondWithJSON(w, http.StatusOK, export)
 
+	log.Println((time.Now().Sub(start)))
 	return
 }
 
