@@ -124,7 +124,7 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player)
 		}
 	}
 
-	log.Println(oldBattles, int(battles))
+	// log.Println(oldBattles, int(battles))
 
 	if int(battles) < oldBattles {
 		log.Println(int(battles), oldBattles)
