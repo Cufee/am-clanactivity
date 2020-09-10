@@ -91,6 +91,9 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player)
 	// log.Println(len(vehicles))
 	if len(vehicles) == 0 {
 		log.Println(playerData.ID)
+		playerData.SessionRating = 0
+		playerData.SessionBattles = 0
+		return
 	}
 
 	// log.Println("Fetched vehicle stats for", playerData.ID)
@@ -132,10 +135,13 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player)
 		playerData.Battles = int(battles)
 		playerData.SessionRating = 0
 		playerData.SessionBattles = 0
-		// Update player record
-		_, err := mongo.UpdatePlayer(playerData, false)
-		if err != nil {
-			log.Println(err)
+		if len(vehicles) > 0 {
+			// Update player record
+			_, err := mongo.UpdatePlayer(playerData, false)
+			if err != nil {
+				log.Println(err)
+			}
+			return
 		}
 		return
 	}
