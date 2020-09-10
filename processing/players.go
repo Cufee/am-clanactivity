@@ -79,7 +79,7 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player)
 
 	// Get live vehicle stats
 	vehicles, err := wgapi.GetVehicleStats(playerData.ID)
-	log.Println("Fetched vehicle stats")
+	log.Println("Fetched vehicle stats for", playerData.ID)
 	if err != nil {
 		log.Println(err)
 		playerData.SessionRating = 0
@@ -89,7 +89,7 @@ func calcPlayerRating(playerData mongo.Player, playersChannel chan mongo.Player)
 
 	// Calcualte Raw rating and get total battles
 	battles, rawRating, err := CalcVehicleRawRating(vehicles)
-	log.Println("Calculated rawRating")
+	log.Println("Calculated rawRating for", playerData.ID)
 	if err != nil {
 		log.Println(err)
 		playerData.AverageRating = 0
