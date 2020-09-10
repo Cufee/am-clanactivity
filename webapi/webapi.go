@@ -3,6 +3,7 @@ package api
 import (
 	"log"
 	"strconv"
+	"time"
 
 	"sync"
 
@@ -128,7 +129,11 @@ func updateClanActivity(w http.ResponseWriter, r *http.Request) {
 
 	// Reset sessions for all players
 	var wg sync.WaitGroup
-	for _, pid := range clanData.MembersIds {
+	for i, pid := range clanData.MembersIds {
+		if (i % 20) == 0 {
+			time.Sleep(1 * time.Second)
+		}
+
 		wg.Add(1)
 		go func(pid int) {
 			defer wg.Done()
@@ -146,7 +151,7 @@ func updateClanActivity(w http.ResponseWriter, r *http.Request) {
 				log.Println(err)
 				return
 			}
-			// Update player record
+			// Update player record'
 			playerData.Battles = battles
 			playerData.SessionBattles = 0
 			playerData.SessionRating = 0

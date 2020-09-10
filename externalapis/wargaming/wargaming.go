@@ -3,6 +3,7 @@ package externalapis
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -92,17 +93,19 @@ var wgAPIClanInfo string = fmt.Sprintf("/wotb/clans/list/?application_id=%s&sear
 var wgAPIClanDetails string = fmt.Sprintf("/wotb/clans/info/?application_id=%s&fields=clan_id,name,tag,is_clan_disbanded,members_ids,updated_at,members&extra=members&clan_id=", config.WgAPIAppID)
 
 // getAPIDomain - Get WG API domain using realm or playerID length
-func getAPIDomain(realm string, playerID int) (string, error) {
+func getAPIDomain(realm string) (string, error) {
 	realm = strings.ToUpper(realm)
-	pIDLen := len(strconv.Itoa(playerID))
 
-	if realm == "NA" || pIDLen == 10 {
+	if realm == "NA" {
 		return "http://api.wotblitz.com", nil
 
-	} else if realm == "EU" || pIDLen == 9 {
+	} else if realm == "EU" {
 		return "http://api.wotblitz.eu", nil
 
-	} else if realm == "RU" || pIDLen == 8 {
+	} else if realm == "RU" {
+		return "http://api.wotblitz.ru", nil
+
+	} else if realm == "ASIA" || realm == "AS" {
 		return "http://api.wotblitz.ru", nil
 
 	} else {
@@ -112,9 +115,10 @@ func getAPIDomain(realm string, playerID int) (string, error) {
 }
 
 // GetVehicleStats - Get current vehicle stats for a player by playerID
-func GetVehicleStats(playerID int) ([]VehicleStats, error) {
-	domain, err := getAPIDomain("", playerID)
+func GetVehicleStats(playerID int, realm string) ([]VehicleStats, error) {
+	domain, err := getAPIDomain(realm)
 	if err != nil {
+		log.Println(err)
 		var result []VehicleStats
 		return result, err
 	}
@@ -126,7 +130,7 @@ func GetVehicleStats(playerID int) ([]VehicleStats, error) {
 	err = utils.GetJSON(finalURL, response)
 	if err != nil {
 		// Check error and retry if timed out or reached limit
-		panic("Not implemented")
+		panic(err)
 	}
 	return response.Data[playerIDStr], nil
 
@@ -137,7 +141,7 @@ func GetClanIDbyTag(realm string, clanTag string) (int, error) {
 	realm = strings.ToUpper(realm)
 	clanTag = strings.ToUpper(clanTag)
 
-	domain, err := getAPIDomain(realm, 0)
+	domain, err := getAPIDomain(realm)
 	if err != nil {
 		return 0, err
 	}
@@ -166,7 +170,7 @@ func GetClanIDbyTag(realm string, clanTag string) (int, error) {
 // GetClanDataByID - Get clan detailed data from clanID and realm
 func GetClanDataByID(realm string, clanID int) (ClanDetails, error) {
 	realm = strings.ToUpper(realm)
-	domain, err := getAPIDomain(realm, 0)
+	domain, err := getAPIDomain(realm)
 	if err != nil {
 		var result ClanDetails
 		return result, err
@@ -190,7 +194,7 @@ func GetClanDataByID(realm string, clanID int) (ClanDetails, error) {
 // GetPlayerDataByID - Get player data from player ID
 func GetPlayerDataByID(realm string, pid int) (PlayerRes, error) {
 	realm = strings.ToUpper(realm)
-	domain, err := getAPIDomain(realm, 0)
+	domain, err := getAPIDomain(realm)
 	if err != nil {
 		var result PlayerRes
 		return result, err
